@@ -3,50 +3,76 @@ export default function ChatUI({
     input,
     setInput,
     handleKeyDown,
-    chatEndRef,
+    chatBoxRef,
     loading,
     onSend,
+    mode, 
+    setMode,
+    maxInputLength,
+    handleInputChange,
 }) {
     return (
-        <div style={styles.container}>
-            <h2 style={styles.title}>Demo Chat Bot</h2>
+      <div style={styles.container}>
+        <h2 style={styles.title}>Demo Chat Bot</h2>
 
-            <div style={styles.chatBox}>
-                {messages.map((msg, i) => (
-                <div
-                    key={i}
-                    style={{
-                    ...styles.message,
-                    alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                    backgroundColor: msg.role === "user" ? "#2563eb" : "#374151",
-                    color: "#fff"
-                    }}
-                >
-                    {msg.content}
-                </div>
-                ))}
-
-                <div ref={chatEndRef} />
+        <div style={styles.chatBox} ref={chatBoxRef}>
+          {messages.map((msg, i) => (
+            <div
+                key={i}
+                style={{
+                ...styles.message,
+                alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                backgroundColor: msg.role === "user" ? "#2563eb" : "#374151",
+                color: "#fff"
+                }}>
+              {msg.content}
             </div>
+          ))}
+        </div>
 
-            <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type your message..."
-                style={styles.input}
-            />
+        <div style={styles.modeRow}>
+          <button 
+            onClick={() => setMode("fast")} 
+            style={{
+              ...styles.modeButton,
+              ...(mode === "fast" ? styles.modeButtonActive : {})
+            }}>
+            Fast
+          </button>
+          <button 
+            onClick={() => setMode("smart")} 
+            style={{
+              ...styles.modeButton,
+              ...(mode === "smart" ? styles.modeButtonActive : {})
+            }}>
+            Smart
+          </button>
+        </div>
+        
+        <div style={styles.inputWrapper}>
+          <textarea
+          value={input}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          placeholder="Type your message..."
+          style={styles.input}
+          />
 
-            <button onClick={onSend} disabled={loading} style={styles.button}>
-                {loading ? "Sending..." : "Send"}
-            </button>
-            </div>
+          <div style={styles.counter}>
+            {input.length}/{maxInputLength}
+          </div>
+        </div>
+        
+        <button onClick={onSend} disabled={loading} style={styles.button}>
+          {loading ? "Thinking..." : "Send"}
+        </button>
+      </div>
     );
-}
+  }
 
 const styles = {
   container: {
-    maxWidth: "100%",
+    width: "100%",
     maxWidth: 1400,
     fontFamily: "Arial, sans-serif",
     display: "flex",
@@ -55,35 +81,53 @@ const styles = {
     padding: 20,
     borderRadius: 12,
     color: "#fff",
-    minHeight: "90vh"
+    height: "100%",
   },
+
   title: {
     textAlign: "center",
-    marginBottom: 10
+    marginBottom: 10,
+    marginTop: -10,
   },
+
   chatBox: {
     border: "1px solid #374151",
     borderRadius: 10,
     padding: 10,
-    height: 700,
+    height: 500,
     overflowY: "auto",
     display: "flex",
     flexDirection: "column",
     gap: 8,
     backgroundColor: "#1f2937"
   },
+
   message: {
     padding: "10px 14px",
     borderRadius: 16,
     maxWidth: "70%",
     wordBreak: "break-word",
-
     display: "block",
     textAlign: "left",
     lineHeight: 1.4
   },
+
+  inputWrapper: {
+    marginTop: 10,
+    position: "relative",
+  },
+
+  counter: {
+    position: "absolute",
+    right: 10,
+    bottom: 8,
+    fontSize: 12,
+    opacity: 0.45,
+    pointerEvents: "none",
+  },
+
   input: {
-    marginTop: 50,
+    marginTop: 5,
     padding: 10,
     borderRadius: 8,
     border: "1px solid #374151",
@@ -92,6 +136,36 @@ const styles = {
     fontSize: 14,
     backgroundColor: "#1f2937",
     color: "#fff",
-    textAlign: "left"
+    textAlign: "left",
+    boxSizing: "border-box",
+    width: "100%",
+    outline: "none",
+  },
+
+  button: {
+    marginTop: 5,
+  },
+
+  modeRow: {
+    display: "flex",
+    gap: 8,
+    marginTop: 10,
+  },
+
+  modeButton: {
+    padding: "8px 14px",
+    borderRadius: 10,
+    border: "1px solid #374151",
+    background: "#1f2937",
+    color: "#9ca3af",
+    cursor: "pointer",
+    transition: "all 0.15s ease",
+  },
+
+  modeButtonActive: {
+    background: "#2563eb",
+    color: "#fff",
+    border: "1px solid #3b82f6",
+    transform: "translateY(-1px)",
   },
 };

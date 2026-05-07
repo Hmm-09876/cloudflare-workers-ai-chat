@@ -1,12 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 
+const MAX_INPUT_LENGTH = 100;
 
 export function useChat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const chatEndRef = useRef(null);
+  const [mode, setMode] = useState("fast");
+  const chatBoxRef = useRef(null);
 
+  const handleInputChange = (e) => {
+    const nextValue = e.target.value;
+
+    if (nextValue.length <= MAX_INPUT_LENGTH) {
+      setInput(nextValue);
+    } else {
+      setInput(nextValue.slice(0, MAX_INPUT_LENGTH));
+    }
+  };
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
@@ -23,7 +34,7 @@ export function useChat() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: payloadMessages }),
+        body: JSON.stringify({ messages: payloadMessages, mode }),
       });
 
       if (!res.ok) {
@@ -64,17 +75,23 @@ export function useChat() {
     }
   };
 
+  
+
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const box = chatBoxRef.current;
+    if (box) box.scrollTop = box.scrollHeight;
   }, [messages]);
 
   return {
     messages,
     input,
-    setInput,
     loading,
-    chatEndRef,
-    sendMessage,
+    chatBoxRef,
+    onSend: sendMessage,
     handleKeyDown,
+    handleInputChange,
+    mode, 
+    setMode,
+    maxInputLength: MAX_INPUT_LENGTH,
   };
 }

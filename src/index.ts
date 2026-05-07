@@ -7,6 +7,7 @@ type ChatMessage = {
 
 type ChatRequestBody = {
   messages?: ChatMessage[];
+  mode?: "fast" | "smart";
 };
 
 export default {
@@ -17,6 +18,12 @@ export default {
 
     const body = (await request.json().catch(() => ({}))) as ChatRequestBody;
     const messages = body.messages;
+    const mode = body.mode ?? "fast";
+
+    const systemPrompt = 
+      mode === "smart"
+        ? `${SYSTEM_PROMPT}\n\nAdd "yohoho" in your phrase.`
+        : SYSTEM_PROMPT;
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return Response.json({ error: "message is required" }, { status: 400 });
@@ -24,7 +31,7 @@ export default {
 
     const ai = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         ...messages,
       ],
     });
