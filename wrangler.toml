@@ -1,4 +1,4 @@
-name = "demo-chat"
+name = "cloudflare-workers-ai-chat"
 compatibility_date = "2026-05-05"
 main = "./src/index.ts"
 
