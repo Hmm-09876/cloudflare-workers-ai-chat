@@ -4,3 +4,6 @@ main = "./src/index.ts"
 
 [ai]
 binding = "AI"
+
+[secrets]
+required = ["TAVILY_API_KEY"]
