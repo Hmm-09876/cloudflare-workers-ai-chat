@@ -1,3 +1,5 @@
+import ReactMarkdown from "react-markdown";
+
 export default function ChatUI({
     messages,
     input,
@@ -17,15 +19,17 @@ export default function ChatUI({
 
         <div style={styles.chatBox} ref={chatBoxRef}>
           {messages.map((msg, i) => (
-            <div
-                key={i}
-                style={{
-                ...styles.message,
-                alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                backgroundColor: msg.role === "user" ? "#2563eb" : "#374151",
-                color: "#fff"
-                }}>
-              {msg.content}
+            <div 
+              key={i}
+              style={{
+              ...styles.message,
+              alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+              backgroundColor: msg.role === "user" ? "#2563eb" : "#374151",
+              color: "#fff"
+              }}>
+              <ReactMarkdown>
+                {msg.content}
+              </ReactMarkdown>
             </div>
           ))}
         </div>
@@ -72,8 +76,8 @@ export default function ChatUI({
 
 const styles = {
   container: {
-    width: "100%",
-    maxWidth: 1400,
+    width: "80vw",
+    margin: "0 auto",
     fontFamily: "Arial, sans-serif",
     display: "flex",
     flexDirection: "column",
@@ -82,6 +86,7 @@ const styles = {
     borderRadius: 12,
     color: "#fff",
     height: "100%",
+    boxSizing: "border-box",
   },
 
   title: {
@@ -94,7 +99,7 @@ const styles = {
     border: "1px solid #374151",
     borderRadius: 10,
     padding: 10,
-    height: 500,
+    height: 700,
     overflowY: "auto",
     display: "flex",
     flexDirection: "column",
@@ -109,11 +114,13 @@ const styles = {
     wordBreak: "break-word",
     display: "block",
     textAlign: "left",
-    lineHeight: 1.4
+    lineHeight: 1.4,
+    whiteSpace: "pre-wrap",
+    overflowWrap: "anywhere",
   },
 
   inputWrapper: {
-    marginTop: 10,
+    marginTop: 20,
     position: "relative",
   },
 
