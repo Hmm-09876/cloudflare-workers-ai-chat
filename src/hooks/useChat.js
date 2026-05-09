@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-const MAX_INPUT_LENGTH = 100;
+const MAX_INPUT_LENGTH = 150;
 
 export function useChat() {
   const [messages, setMessages] = useState([]);

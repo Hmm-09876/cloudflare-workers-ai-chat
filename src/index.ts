@@ -10,7 +10,12 @@ type ChatRequestBody = {
   mode?: "fast" | "smart";
 };
 
-async function searchWeb(query: string, env: Env) {
+async function searchWeb(query: string, env: Env, opts: {
+  topic?: "general" | "news" | "finance";
+  timeRange?: "day" | "week" | "month" | "year";
+  searchDepth?: "basic" | "advanced";
+  maxResults?: number;
+} = {}) {
   const res = await fetch("https://api.tavily.com/search", {
     method: "POST",
     headers: {
@@ -19,9 +24,10 @@ async function searchWeb(query: string, env: Env) {
     },
     body: JSON.stringify({
       query,
-      search_depth: "advanced",
-      max_results: 10,
-      topic: "general",
+      topic: opts.topic ?? "general",
+      time_range: opts.timeRange,
+      search_depth: opts.searchDepth ?? "advanced",
+      max_results: opts.maxResults ?? 8,
     }),
   });
 
@@ -31,16 +37,21 @@ async function searchWeb(query: string, env: Env) {
     throw new Error(`Search failed: ${res.status}`);
   }
 
-
   const rawText = await res.text();
   console.log("TAVILY RAW:", rawText);
   const data: any = JSON.parse(rawText);
-  // const data: any = await res.json();
   console.log("TAVILY RAW:", JSON.stringify(data, null, 2));
+
   return (data.results ?? []).map((r: any) => ({
     title: r.title ?? "",
     url: r.url ?? "",
-    content: (r.content ?? "").slice(0, 300),
+    content: (r.content ?? "")
+      .replace(/\s+/g, " ")
+      .replace(/Skip Navigation/gi, "")
+      .replace(/Advertisement/gi, "")  
+      .slice(0, 300),
+    score: r.score ?? 0,
+    published_date: r.published_date ?? "",
   }));
 }
 
@@ -57,15 +68,14 @@ export default {
     let systemPrompt = SYSTEM_PROMPT;
 
     if (mode === "smart") {
-      // const lastUserMessage = 
-      //   [...(messages ?? [])].reverse().find((m) => m.role === "user")?.content ?? "";
 
       const userMessages = [...(messages ?? [])]
         .filter((m) => m.role === "user")
         .map((m) => m.content);
 
       const lastUserMessage = userMessages[userMessages.length - 1] ?? "";
-      const previousUserMessage = userMessages[userMessages.length -2] ?? "";
+      
+
 
       const shouldSearchCheck = await env.AI.run(
         "@cf/meta/llama-3.1-8b-instruct",
@@ -74,87 +84,86 @@ export default {
             {
               role: "system",
               content: `
-                You decide whether a web search is needed.
+                Return ONLY valid JSON:
+                {
+                  "shouldSearch": boolean,
+                  "searchQuery": string,
+                  "reason": string
+                }
 
-                Reply ONLY with:
-                YES
-                or
-                NO
-
-                Search is needed for:
-                - recent news
-                - current events
-                - live data
-                - latest updates
-                - time-sensitive info
-
-                Search is not needed for:
-                - coding
-                - explanations
-                - general knowledge
-                - casual chat
-                - math
-                - grammar
+                Rules:
+                - Base the decision only on the user's latest message.
+                - Keep the main subject of the user's question unchanged.
+                - Do not replace the subject with a more generic topic.
+                - Only set shouldSearch=true if UNSURE.
+                - If the user asks about current/latest/now or any similar in every languages, set shouldSearch=true.
+                - Prefer globally recognized and high-quality sources instead of sources that only match the user's language.
+                - searchQuery must stay close to the user's actual intent.
+                - Output only JSON.
               `,
             },
-            {
-              role: "user",
-              content: lastUserMessage,
-            },
+            { role: "user", content: lastUserMessage },
           ],
-          max_tokens: 5,
+          max_tokens: 160,
+          temperature: 0,
         }
       );
 
-      const shoudSearchResp = 
+      const shouldSearchResp = 
         typeof shouldSearchCheck === "string"
         ? shouldSearchCheck
         : String((shouldSearchCheck as any)?.response ?? "");
       
-      const shoudSearch = shoudSearchResp.includes("YES");
+      let decision: { shouldSearch: boolean; searchQuery: string };
+      try {
+        decision = JSON.parse(shouldSearchResp);
+      } catch {
+        decision = { shouldSearch: true, searchQuery: lastUserMessage };
+      }
 
-      const searchQuery = 
-        lastUserMessage.length < 35 ? `
-          Previous user context:
-          ${previousUserMessage} 
-          Current question:
-          ${lastUserMessage}
-        `.trim() : 
-          lastUserMessage;
+      const shouldSearch = decision.shouldSearch;
+      const searchQuery = decision.searchQuery || lastUserMessage;
 
       try {
-        const results = shoudSearch ? await searchWeb(searchQuery, env) : [];
+        const results = shouldSearch 
+          ? await searchWeb(searchQuery, env, {
+            topic: "general",
+            searchDepth: "advanced",
+            maxResults: 8,
+          }) : [];
+
+        const filteredResults = results.slice(0,5);
+        const currentDate = new Intl.DateTimeFormat("en-CA", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date());
 
         const webContext = 
-          results.length > 0
-            ? results
+          filteredResults.length > 0
+            ? filteredResults
               .map(
                 (r: any, i: number) => 
-                  `${i + 1}. ${r.title}\n${r.url}\n${r.content}`
+                  `${i + 1}. ${r.title}\n${r.url}\n${r.content}\nDate: ${r.published_date}\nScore: ${r.score}`
               )
               .join("\n\n")
             : "No recent web results found";
 
         systemPrompt = `
           ${SYSTEM_PROMPT}
-                    
+          Current date: ${currentDate}
+
           STRICT RULES FOR SMART MODE:
-          - Keep answers under 150 token.
-          - The answer focus on the question.
-          - Do NOT make the answers cut off and break the formatting.
-          - If the output might get cut off, try to keep the response shorter, else, do detail.
-          - Use plain text bullets like:
-          "• item 1
-
-          • item 2
-
-          • item 3
-
-          "
-          - Do NOT rely on prior knowledge for recent news.
-          - If the web results do not contain the answer, say you could not verify it from recent sources.
+          - Never treat any year (e.g. 2024, 2025) as current unless it matches Current date.
+          - Interpret all time-related queries relative to this date.
+          - Use web results when they are provided.
+          - If the question is time-sensitive, rely on recent sources.
+          - If the question is evergreen or historical, answer normally and do not force news.
+          - If web results do not contain the answer, say you could not verify it from the sources.
           - Mention dates when available.
-          - Do not mention irrelevant old events unless the web results include them.
+          - Only use claims that are explicitly supported by the web results.
+          - Do not infer or combine unrelated articles into new conclusions.
+          - If sources are unclear or conflicting, say the situation is unclear.
               
           WEB RESULTS:
           ${webContext}
@@ -175,11 +184,33 @@ export default {
     }
 
     console.log("FINAL SYSTEM PROMPT:", systemPrompt);
+    // const ai = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+    //   messages: [
+    //     { role: "system", content: systemPrompt },
+    //     ...messages,
+    //   ],
+    // });
+
+    const lastUserMessage = [...(messages ?? [])]
+        .filter((m) => m.role === "user")
+        .at(-1)?.content ?? "";
+    
     const ai = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
       messages: [
-        { role: "system", content: systemPrompt },
-        ...messages,
+        {
+          role: "system",
+          content: `${systemPrompt}
+            CRITICAL:
+            - Ignore previous assistant answers in the chat if they conflict with WEB RESULTS.
+            - Do not invent anything not explicitly supported by WEB RESULTS.
+            - If the sources do not clearly answer the question, say you could not verify it.`,
+        },
+        {
+          role: "user",
+          content: lastUserMessage,
+        },
       ],
+      temperature: 0,
     });
 
     console.log("AI RAW:", ai);
