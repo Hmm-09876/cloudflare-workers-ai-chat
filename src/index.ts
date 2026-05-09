@@ -10,7 +10,12 @@ type ChatRequestBody = {
   mode?: "fast" | "smart";
 };
 
-async function searchWeb(query: string, env: Env) {
+async function searchWeb(query: string, env: Env, opts: {
+  topic?: "general" | "news" | "finance";
+  timeRange?: "day" | "week" | "month" | "year";
+  searchDepth?: "basic" | "advanced";
+  maxResults?: number;
+} = {}) {
   const res = await fetch("https://api.tavily.com/search", {
     method: "POST",
     headers: {
@@ -19,9 +24,10 @@ async function searchWeb(query: string, env: Env) {
     },
     body: JSON.stringify({
       query,
-      search_depth: "advanced",
-      max_results: 10,
-      topic: "general",
+      topic: opts.topic ?? "general",
+      time_range: opts.timeRange,
+      search_depth: opts.searchDepth ?? "advanced",
+      max_results: opts.maxResults ?? 8,
     }),
   });
 
@@ -31,16 +37,21 @@ async function searchWeb(query: string, env: Env) {
     throw new Error(`Search failed: ${res.status}`);
   }
 
-
   const rawText = await res.text();
   console.log("TAVILY RAW:", rawText);
   const data: any = JSON.parse(rawText);
-  // const data: any = await res.json();
   console.log("TAVILY RAW:", JSON.stringify(data, null, 2));
+
   return (data.results ?? []).map((r: any) => ({
     title: r.title ?? "",
     url: r.url ?? "",
-    content: (r.content ?? "").slice(0, 300),
+    content: (r.content ?? "")
+      .replace(/\s+/g, " ")
+      .replace(/Skip Navigation/gi, "")
+      .replace(/Advertisement/gi, "")  
+      .slice(0, 300),
+    score: r.score ?? 0,
+    published_date: r.published_date ?? "",
   }));
 }
 
@@ -57,15 +68,12 @@ export default {
     let systemPrompt = SYSTEM_PROMPT;
 
     if (mode === "smart") {
-      // const lastUserMessage = 
-      //   [...(messages ?? [])].reverse().find((m) => m.role === "user")?.content ?? "";
 
       const userMessages = [...(messages ?? [])]
         .filter((m) => m.role === "user")
         .map((m) => m.content);
 
       const lastUserMessage = userMessages[userMessages.length - 1] ?? "";
-      const previousUserMessage = userMessages[userMessages.length -2] ?? "";
 
       const shouldSearchCheck = await env.AI.run(
         "@cf/meta/llama-3.1-8b-instruct",
@@ -74,27 +82,17 @@ export default {
             {
               role: "system",
               content: `
-                You decide whether a web search is needed.
+                Return ONLY valid JSON:
+                {
+                  "shouldSearch": boolean,
+                  "searchQuery": string,
+                }
 
-                Reply ONLY with:
-                YES
-                or
-                NO
-
-                Search is needed for:
-                - recent news
-                - current events
-                - live data
-                - latest updates
-                - time-sensitive info
-
-                Search is not needed for:
-                - coding
-                - explanations
-                - general knowledge
-                - casual chat
-                - math
-                - grammar
+                Rules:
+                - Use ONLY the user's latest message as the main intent.
+                - Do not broaden the query beyond what the user asked.
+                - searchQuery should be specific enough to retrieve relevant web results.
+                - If no search is needed, searchQuery = "".
               `,
             },
             {
@@ -102,35 +100,41 @@ export default {
               content: lastUserMessage,
             },
           ],
-          max_tokens: 5,
+          max_tokens: 120,
         }
       );
 
-      const shoudSearchResp = 
+      const shouldSearchResp = 
         typeof shouldSearchCheck === "string"
         ? shouldSearchCheck
         : String((shouldSearchCheck as any)?.response ?? "");
       
-      const shoudSearch = shoudSearchResp.includes("YES");
+      let decision: { shouldSearch: boolean; searchQuery: string };
+      try {
+        decision = JSON.parse(shouldSearchResp);
+      } catch {
+        decision = { shouldSearch: false, searchQuery: "" };
+      }
 
-      const searchQuery = 
-        lastUserMessage.length < 35 ? `
-          Previous user context:
-          ${previousUserMessage} 
-          Current question:
-          ${lastUserMessage}
-        `.trim() : 
-          lastUserMessage;
+      const shouldSearch = decision.shouldSearch;
+      const searchQuery = decision.searchQuery || lastUserMessage;
 
       try {
-        const results = shoudSearch ? await searchWeb(searchQuery, env) : [];
+        const results = shouldSearch 
+          ? await searchWeb(searchQuery, env, {
+            topic: "general",
+            searchDepth: "advanced",
+            maxResults: 8,
+          }) : [];
+
+        const filteredResults = results.slice(0,5);
 
         const webContext = 
-          results.length > 0
-            ? results
+          filteredResults.length > 0
+            ? filteredResults
               .map(
                 (r: any, i: number) => 
-                  `${i + 1}. ${r.title}\n${r.url}\n${r.content}`
+                  `${i + 1}. ${r.title}\n${r.url}\n${r.content}\nDate: ${r.published_date}\nScore: ${r.score}`
               )
               .join("\n\n")
             : "No recent web results found";
@@ -139,22 +143,15 @@ export default {
           ${SYSTEM_PROMPT}
                     
           STRICT RULES FOR SMART MODE:
-          - Keep answers under 150 token.
-          - The answer focus on the question.
-          - Do NOT make the answers cut off and break the formatting.
-          - If the output might get cut off, try to keep the response shorter, else, do detail.
-          - Use plain text bullets like:
-          "• item 1
-
-          • item 2
-
-          • item 3
-
-          "
-          - Do NOT rely on prior knowledge for recent news.
-          - If the web results do not contain the answer, say you could not verify it from recent sources.
+          - Use web results when they are provided.
+          - If the question is time-sensitive, rely on recent sources.
+          - If the question is evergreen or historical, answer normally and do not force news.
+          - If web results do not contain the answer, say you could not verify it from the sources.
           - Mention dates when available.
-          - Do not mention irrelevant old events unless the web results include them.
+          - Only use claims that are explicitly supported by the web results.
+          - Do not infer or combine unrelated articles into new conclusions.
+          - If sources are unclear or conflicting, say the situation is unclear.
+          - Never invent agreements, outcomes, or confirmed events unless directly stated in the sources.
               
           WEB RESULTS:
           ${webContext}
