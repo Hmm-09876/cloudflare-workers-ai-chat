@@ -74,6 +74,8 @@ export default {
         .map((m) => m.content);
 
       const lastUserMessage = userMessages[userMessages.length - 1] ?? "";
+      
+
 
       const shouldSearchCheck = await env.AI.run(
         "@cf/meta/llama-3.1-8b-instruct",
@@ -86,21 +88,24 @@ export default {
                 {
                   "shouldSearch": boolean,
                   "searchQuery": string,
+                  "reason": string
                 }
 
                 Rules:
-                - Use ONLY the user's latest message as the main intent.
-                - Do not broaden the query beyond what the user asked.
-                - searchQuery should be specific enough to retrieve relevant web results.
-                - If no search is needed, searchQuery = "".
+                - Base the decision only on the user's latest message.
+                - Keep the main subject of the user's question unchanged.
+                - Do not replace the subject with a more generic topic.
+                - Only set shouldSearch=true if UNSURE.
+                - If the user asks about current/latest/now or any similar in every languages, set shouldSearch=true.
+                - Prefer globally recognized and high-quality sources instead of sources that only match the user's language.
+                - searchQuery must stay close to the user's actual intent.
+                - Output only JSON.
               `,
             },
-            {
-              role: "user",
-              content: lastUserMessage,
-            },
+            { role: "user", content: lastUserMessage },
           ],
-          max_tokens: 120,
+          max_tokens: 160,
+          temperature: 0,
         }
       );
 
@@ -113,7 +118,7 @@ export default {
       try {
         decision = JSON.parse(shouldSearchResp);
       } catch {
-        decision = { shouldSearch: false, searchQuery: "" };
+        decision = { shouldSearch: true, searchQuery: lastUserMessage };
       }
 
       const shouldSearch = decision.shouldSearch;
@@ -128,6 +133,11 @@ export default {
           }) : [];
 
         const filteredResults = results.slice(0,5);
+        const currentDate = new Intl.DateTimeFormat("en-CA", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date());
 
         const webContext = 
           filteredResults.length > 0
@@ -141,8 +151,11 @@ export default {
 
         systemPrompt = `
           ${SYSTEM_PROMPT}
-                    
+          Current date: ${currentDate}
+
           STRICT RULES FOR SMART MODE:
+          - Never treat any year (e.g. 2024, 2025) as current unless it matches Current date.
+          - Interpret all time-related queries relative to this date.
           - Use web results when they are provided.
           - If the question is time-sensitive, rely on recent sources.
           - If the question is evergreen or historical, answer normally and do not force news.
@@ -151,7 +164,6 @@ export default {
           - Only use claims that are explicitly supported by the web results.
           - Do not infer or combine unrelated articles into new conclusions.
           - If sources are unclear or conflicting, say the situation is unclear.
-          - Never invent agreements, outcomes, or confirmed events unless directly stated in the sources.
               
           WEB RESULTS:
           ${webContext}
@@ -172,11 +184,33 @@ export default {
     }
 
     console.log("FINAL SYSTEM PROMPT:", systemPrompt);
+    // const ai = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+    //   messages: [
+    //     { role: "system", content: systemPrompt },
+    //     ...messages,
+    //   ],
+    // });
+
+    const lastUserMessage = [...(messages ?? [])]
+        .filter((m) => m.role === "user")
+        .at(-1)?.content ?? "";
+    
     const ai = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
       messages: [
-        { role: "system", content: systemPrompt },
-        ...messages,
+        {
+          role: "system",
+          content: `${systemPrompt}
+            CRITICAL:
+            - Ignore previous assistant answers in the chat if they conflict with WEB RESULTS.
+            - Do not invent anything not explicitly supported by WEB RESULTS.
+            - If the sources do not clearly answer the question, say you could not verify it.`,
+        },
+        {
+          role: "user",
+          content: lastUserMessage,
+        },
       ],
+      temperature: 0,
     });
 
     console.log("AI RAW:", ai);
