@@ -1,178 +1,27 @@
-import ReactMarkdown from "react-markdown";
+// import MessageBubble from "./chat/MessageBubble";
+import ModeToggle from "./chat/ModeToggle";
+import Composer from "./chat/Composer";
+import { styles } from "./chat/styles"
+import MessageList from "./chat/MessageList";
 
-export default function ChatUI({
-    messages,
-    input,
-    setInput,
-    handleKeyDown,
-    chatBoxRef,
-    loading,
-    onSend,
-    mode, 
-    setMode,
-    maxInputLength,
-    handleInputChange,
-}) {
-    return (
-      <div style={styles.container}>
-        <h2 style={styles.title}>Demo Chat Bot</h2>
+export default function ChatUI(props) {
+  return (
+    <div style={styles.container}>
+      <h2 style={styles.title}>Demo Chat Bot</h2>
 
-        <div style={styles.chatBox} ref={chatBoxRef}>
-          {messages.map((msg, i) => (
-            <div 
-              key={i}
-              style={{
-              ...styles.message,
-              alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-              backgroundColor: msg.role === "user" ? "#2563eb" : "#374151",
-              color: "#fff"
-              }}>
-              <ReactMarkdown>
-                {msg.content}
-              </ReactMarkdown>
-            </div>
-          ))}
-        </div>
+      <MessageList messages={props.messages} chatBoxRef={props.chatBoxRef} />
 
-        <div style={styles.modeRow}>
-          <button 
-            onClick={() => setMode("fast")} 
-            style={{
-              ...styles.modeButton,
-              ...(mode === "fast" ? styles.modeButtonActive : {})
-            }}>
-            Fast
-          </button>
-          <button 
-            onClick={() => setMode("smart")} 
-            style={{
-              ...styles.modeButton,
-              ...(mode === "smart" ? styles.modeButtonActive : {})
-            }}>
-            Smart
-          </button>
-        </div>
-        
-        <div style={styles.inputWrapper}>
-          <textarea
-          value={input}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Type your message..."
-          style={styles.input}
-          />
+      <ModeToggle mode={props.mode} setMode={props.setMode} />
 
-          <div style={styles.counter}>
-            {input.length}/{maxInputLength}
-          </div>
-        </div>
-        
-        <button onClick={onSend} disabled={loading} style={styles.button}>
-          {loading ? "Thinking..." : "Send"}
-        </button>
-      </div>
-    );
-  }
+      <Composer
+        input={props.input}
+        handleInputChange={props.handleInputChange}
+        handleKeyDown={props.handleKeyDown}
+        onSend={props.onSend}
+        loading={props.loading}
+        maxInputLength={props.maxInputLength}
+      />
+    </div>
+  );
+}
 
-const styles = {
-  container: {
-    width: "80vw",
-    margin: "0 auto",
-    fontFamily: "Arial, sans-serif",
-    display: "flex",
-    flexDirection: "column",
-    backgroundColor: "#111827",
-    padding: 20,
-    borderRadius: 12,
-    color: "#fff",
-    height: "100%",
-    boxSizing: "border-box",
-  },
-
-  title: {
-    textAlign: "center",
-    marginBottom: 10,
-    marginTop: -10,
-  },
-
-  chatBox: {
-    border: "1px solid #374151",
-    borderRadius: 10,
-    padding: 10,
-    height: 700,
-    overflowY: "auto",
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-    backgroundColor: "#1f2937"
-  },
-
-  message: {
-    padding: "10px 14px",
-    borderRadius: 16,
-    maxWidth: "70%",
-    wordBreak: "break-word",
-    display: "block",
-    textAlign: "left",
-    lineHeight: 1.4,
-    whiteSpace: "pre-wrap",
-    overflowWrap: "anywhere",
-  },
-
-  inputWrapper: {
-    marginTop: 20,
-    position: "relative",
-  },
-
-  counter: {
-    position: "absolute",
-    right: 10,
-    bottom: 8,
-    fontSize: 12,
-    opacity: 0.45,
-    pointerEvents: "none",
-  },
-
-  input: {
-    marginTop: 5,
-    padding: 10,
-    borderRadius: 8,
-    border: "1px solid #374151",
-    resize: "none",
-    minHeight: 50,
-    fontSize: 14,
-    backgroundColor: "#1f2937",
-    color: "#fff",
-    textAlign: "left",
-    boxSizing: "border-box",
-    width: "100%",
-    outline: "none",
-  },
-
-  button: {
-    marginTop: 5,
-  },
-
-  modeRow: {
-    display: "flex",
-    gap: 8,
-    marginTop: 10,
-  },
-
-  modeButton: {
-    padding: "8px 14px",
-    borderRadius: 10,
-    border: "1px solid #374151",
-    background: "#1f2937",
-    color: "#9ca3af",
-    cursor: "pointer",
-    transition: "all 0.15s ease",
-  },
-
-  modeButtonActive: {
-    background: "#2563eb",
-    color: "#fff",
-    border: "1px solid #3b82f6",
-    transform: "translateY(-1px)",
-  },
-};
