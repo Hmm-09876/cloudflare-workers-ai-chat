@@ -39,12 +39,14 @@ export async function decideSearchAction(
                   - hot by search trend
                   - hot by revenue
                 - If needClarification=true, output a short clarificationQuestion instead of searchQuery.
+                - Only use the web results provided.
+                - Automatically infer the topic and prioritize the most recent relevant web results when freshness matters.                
                 - Output only JSON.
               `,
             },
             { role: "user", content: lastUserMessage },
           ],
-          max_tokens: 160,
+          max_tokens: 180,
           temperature: 0,
         }
     );

@@ -13,11 +13,13 @@ export function buildWebContext(results: any[]) {
 
 export function buildSmartSystemPrompt(
     basePrompt: string,
-    webContext: string
+    webContext: string,
+    currentDate: string
 ) {
     return `
         ${basePrompt}
-
+        Current date: ${currentDate}
+        
         STRICT RULES FOR SMART MODE:
         - Use WEB RESULTS only if they are relevant.
         - Priority global/english sources.
