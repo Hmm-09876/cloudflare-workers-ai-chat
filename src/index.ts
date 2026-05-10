@@ -55,6 +55,37 @@ async function searchWeb(query: string, env: Env, opts: {
   }));
 }
 
+async function toEnQuery(env: Env, query: string) {
+  const res = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+    messages: [
+      {
+        role: "system",
+        content: `
+          Convert this query into a GLOBAL English search query.
+          
+          RULES:
+          - Keep meaning unchanged
+          - Do NOT localize
+          - Prefer international terms
+          - Output ONLY the query
+        `,
+      },
+      { role: "user", content: query},
+    ],
+    temperature: 0,
+  });
+
+  return (res as any)?.response ?? query;
+}
+
+function buildGlobalQueries(enQuery: string) {
+  return [ 
+    enQuery,
+    `${enQuery} trending`,
+    `${enQuery} worldwide`,
+  ]
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     if (request.method !== "POST") {
@@ -75,7 +106,11 @@ export default {
 
       const lastUserMessage = userMessages[userMessages.length - 1] ?? "";
       
-
+      const currentDate = new Intl.DateTimeFormat("en-CA", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date());
 
       const shouldSearchCheck = await env.AI.run(
         "@cf/meta/llama-3.1-8b-instruct",
@@ -87,18 +122,24 @@ export default {
                 Return ONLY valid JSON:
                 {
                   "shouldSearch": boolean,
+                  "needClarification": boolean,
                   "searchQuery": string,
+                  "clarificationQuestion": string,
                   "reason": string
                 }
 
+                Current date: ${currentDate}
                 Rules:
-                - Base the decision only on the user's latest message.
-                - Keep the main subject of the user's question unchanged.
-                - Do not replace the subject with a more generic topic.
-                - Only set shouldSearch=true if UNSURE.
-                - If the user asks about current/latest/now or any similar in every languages, set shouldSearch=true.
-                - Prefer globally recognized and high-quality sources instead of sources that only match the user's language.
-                - searchQuery must stay close to the user's actual intent.
+                - Decide based on the latest user message.
+                - If the user asks about current, latest, hot, trending, now, recently, or similar => consider search.
+                - If the user asks for "hot/trending/best right now" or any similar and the metric is unclear, say the metric is ambiguous and give the most reasonable interpretation.
+                - If "hot" / "best" / "trending" is ambiguous or anything similar and no metric is specified, set needClarification=true.
+                - Examples of missing metric:
+                  - hot by player count
+                  - hot by popularity
+                  - hot by search trend
+                  - hot by revenue
+                - If needClarification=true, output a short clarificationQuestion instead of searchQuery.
                 - Output only JSON.
               `,
             },
@@ -114,7 +155,13 @@ export default {
         ? shouldSearchCheck
         : String((shouldSearchCheck as any)?.response ?? "");
       
-      let decision: { shouldSearch: boolean; searchQuery: string };
+      let decision: { 
+        shouldSearch: boolean; 
+        needClarification?: boolean;
+        searchQuery?: string;
+        clarificationQuestion?: string;
+        reason?: string;
+      };
       try {
         decision = JSON.parse(shouldSearchResp);
       } catch {
@@ -124,20 +171,38 @@ export default {
       const shouldSearch = decision.shouldSearch;
       const searchQuery = decision.searchQuery || lastUserMessage;
 
+      if (decision.needClarification) {
+        return Response.json({
+          response: decision.clarificationQuestion
+        });
+      }
+
       try {
-        const results = shouldSearch 
-          ? await searchWeb(searchQuery, env, {
-            topic: "general",
-            searchDepth: "advanced",
-            maxResults: 8,
-          }) : [];
+        // const results = shouldSearch 
+        //   ? await searchWeb(searchQuery, env, {
+        //     topic: "general",
+        //     searchDepth: "advanced",
+        //     maxResults: 8,
+        //   }) : [];
+
+        const enQuery = await toEnQuery(env, searchQuery);
+        const queries = buildGlobalQueries(enQuery);
+
+        const resultsGroups = shouldSearch
+          ? await Promise.all(
+            queries.slice(0, 4).map((q) => 
+              searchWeb(q, env, {
+                topic: "general",
+                searchDepth: "advanced",
+                maxResults: 8,
+              }))
+          )
+        : [];
+
+        const results = resultsGroups.flat();
 
         const filteredResults = results.slice(0,5);
-        const currentDate = new Intl.DateTimeFormat("en-CA", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).format(new Date());
+        
 
         const webContext = 
           filteredResults.length > 0
@@ -151,19 +216,14 @@ export default {
 
         systemPrompt = `
           ${SYSTEM_PROMPT}
-          Current date: ${currentDate}
 
           STRICT RULES FOR SMART MODE:
-          - Never treat any year (e.g. 2024, 2025) as current unless it matches Current date.
-          - Interpret all time-related queries relative to this date.
-          - Use web results when they are provided.
-          - If the question is time-sensitive, rely on recent sources.
-          - If the question is evergreen or historical, answer normally and do not force news.
-          - If web results do not contain the answer, say you could not verify it from the sources.
-          - Mention dates when available.
-          - Only use claims that are explicitly supported by the web results.
-          - Do not infer or combine unrelated articles into new conclusions.
-          - If sources are unclear or conflicting, say the situation is unclear.
+          - Use WEB RESULTS only if they are relevant.
+          - Priority global/english sources.
+          - If web results do not clearly support an answer, say you could not verify it.
+          - Prefer a short direct answer over a long list.
+          - Mention the basis of the answer, for example: search trend, current popularity, or recent mentions.
+          - Never combine unrelated sources into one.
               
           WEB RESULTS:
           ${webContext}
@@ -201,14 +261,19 @@ export default {
           role: "system",
           content: `${systemPrompt}
             CRITICAL:
+            - If the user request is ambiguous:
+              - First identify possible interpretations
+              - If confidence is low, do NOT guess
+              - Either ask a clarification question OR state multiple interpretations briefly
             - Ignore previous assistant answers in the chat if they conflict with WEB RESULTS.
             - Do not invent anything not explicitly supported by WEB RESULTS.
             - If the sources do not clearly answer the question, say you could not verify it.`,
         },
-        {
-          role: "user",
-          content: lastUserMessage,
-        },
+        // {
+        //   role: "user",
+        //   content: lastUserMessage,
+        // },
+        ...messages,
       ],
       temperature: 0,
     });
