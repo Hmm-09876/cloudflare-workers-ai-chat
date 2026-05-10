@@ -79,7 +79,7 @@ export default {
         
         const webContext = buildWebContext(results);
 
-        systemPrompt = buildSmartSystemPrompt(SYSTEM_PROMPT, webContext);
+        systemPrompt = buildSmartSystemPrompt(SYSTEM_PROMPT, webContext, currentDate);
       
       } catch (err) {
           console.log("SMART SEARCH ERROR:", err);
