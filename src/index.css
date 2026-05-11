@@ -109,3 +109,27 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #0b1020;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+textarea {
+  font: inherit;
+}
