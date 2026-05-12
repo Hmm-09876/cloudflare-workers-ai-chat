@@ -155,6 +155,17 @@ export const styles = {
     maxWidth: "70%",
   },
 
+  codeBlock: {
+    maxWidth: "100%",
+    overflowX: "auto",
+    overflowY: "hidden",
+    padding: "12px 14px",
+    borderRadius: "12px",
+    border: "1px solid rgba(255, 255, 255, 0.10)",
+    boxSizing: "border-box",
+    whiteSpace: "pre",
+  },
+
   userBubble: {
     marginLeft: "auto",
     background: "rgba(59, 130, 246, 0.18)",
