@@ -7,7 +7,6 @@ export const styles = {
     color: "#e5e7eb",
     display: "flex",
     flexDirection: "column",
-    // overflowX: "auto",
   },
 
   shell: {
@@ -46,9 +45,6 @@ export const styles = {
     lineHeight: 1.05,
     fontWeight: 800,
     color: "#ffffff",
-    // textAlign: "center",
-    // marginBottom: 10,
-    // marginTop: -10,
   },
 
   subtitle: {
@@ -112,20 +108,16 @@ export const styles = {
   },
 
   messageList: {
-    // flex: 1,
-    // minHeight: 0,
     overflowY: "auto",
     scrollBehavior: "smooth",
     display: "flex",
     flexDirection: "column",
     gap: "12px",
-    // maxHeight: "480px",
     paddingRight: "4px",
     alignItems: "flex-start",
   },
 
   emptyState: {
-    // minHeight: "260px",
     height: "100%",
     display: "flex",
     flexDirection: "column",
@@ -160,7 +152,6 @@ export const styles = {
     padding: "14px 16px",
     borderRadius: "18px",
     border: "1px solid rgba(255, 255, 255, 0.08)",
-    // width: "fit-content",
     maxWidth: "70%",
   },
 
@@ -173,15 +164,6 @@ export const styles = {
   assistantBubble: {
     background: "rgba(255, 255, 255, 0.05)",
   },
-
-  // roleLabel: {
-  //   marginBottom: "8px",
-  //   fontSize: "12px",
-  //   fontWeight: 700,
-  //   letterSpacing: "0.04em",
-  //   textTransform: "uppercase",
-  //   color: "#93c5fd",
-  // },
 
   messageBody: {
     fontSize: "15px",

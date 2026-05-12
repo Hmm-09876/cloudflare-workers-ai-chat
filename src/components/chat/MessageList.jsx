@@ -24,12 +24,6 @@ export default function MessageList({ messages, chatBoxRef }) {
     }
 
     return (
-        // <div style={styles.chatBox} ref={chatBoxRef}>
-        //     {messages.map((msg, i) => (
-        //         <MessageBubble key={i} msg={msg} />
-        //     ))}
-        // </div>
-
         <div ref={chatBoxRef} style={styles.messageList}>
             {messages.map((msg, i) => (
                 <MessageBubble key={`${msg.role}-${i}`} msg={msg} />

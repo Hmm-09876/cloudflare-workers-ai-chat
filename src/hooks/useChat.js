@@ -75,13 +75,6 @@ export function useChat() {
     }
   };
 
-  
-
-  // useEffect(() => {
-  //   const box = chatBoxRef.current;
-  //   if (box) box.scrollTop = box.scrollHeight;
-  // }, [messages]);
-
   return {
     messages,
     input,
