@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 
 const MAX_INPUT_LENGTH = 150;
 
@@ -74,13 +74,6 @@ export function useChat() {
       sendMessage();
     }
   };
-
-  
-
-  useEffect(() => {
-    const box = chatBoxRef.current;
-    if (box) box.scrollTop = box.scrollHeight;
-  }, [messages]);
 
   return {
     messages,

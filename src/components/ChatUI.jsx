@@ -16,28 +16,11 @@ export default function ChatUI({
   maxInputLength,
 }) {
   return (
-    // <div style={styles.container}>
-    //   <h2 style={styles.title}>Demo Chat Bot</h2>
-
-    //   <MessageList messages={props.messages} chatBoxRef={props.chatBoxRef} />
-
-    //   <ModeToggle mode={props.mode} setMode={props.setMode} />
-
-    //   <Composer
-    //     input={props.input}
-    //     handleInputChange={props.handleInputChange}
-    //     handleKeyDown={props.handleKeyDown}
-    //     onSend={props.onSend}
-    //     loading={props.loading}
-    //     maxInputLength={props.maxInputLength}
-    //   />
-    // </div>
-
     <main style={styles.page}>
       <section style={styles.shell}>
         <div style={styles.topBar}>
           <div>
-            <p style={styles.kicker}>Cloudflare Worker AI</p>
+            <p style={styles.kicker}>Cloudflare Workers AI</p>
             <h1 style={styles.title}>AI Chat Demo</h1>
             <p style={styles.subtitle}>
               Portfolio project showcasing an AI chat app powered by Cloudflare Workers AI.

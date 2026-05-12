@@ -7,14 +7,13 @@ export const styles = {
     color: "#e5e7eb",
     display: "flex",
     flexDirection: "column",
-    overflowX: "auto",
   },
 
   shell: {
     flex: 1,
     minHeight: 0,
-    width: "980px",
-    maxWidth: "100%",
+    width: "100%",
+    maxWidth: "980px",
     margin: "0 auto",
     display: "flex",
     flexDirection: "column",
@@ -46,9 +45,6 @@ export const styles = {
     lineHeight: 1.05,
     fontWeight: 800,
     color: "#ffffff",
-    // textAlign: "center",
-    // marginBottom: 10,
-    // marginTop: -10,
   },
 
   subtitle: {
@@ -87,7 +83,7 @@ export const styles = {
     border: "1px solid rgba(255, 255, 255, 0.12)",
     background: "rgba(255, 255, 255, 0.05)",
     color: "#e5e7eb",
-    cursor: "center",
+    cursor: "pointer",
     fontWeight: 600,
   },
 
@@ -112,21 +108,16 @@ export const styles = {
   },
 
   messageList: {
-    // flex: 1,
-    // minHeight: 0,
     overflowY: "auto",
     scrollBehavior: "smooth",
     display: "flex",
     flexDirection: "column",
     gap: "12px",
-    maxHeight: "480px",
-    overFlowY: "auto",
     paddingRight: "4px",
     alignItems: "flex-start",
   },
 
   emptyState: {
-    // minHeight: "260px",
     height: "100%",
     display: "flex",
     flexDirection: "column",
@@ -140,6 +131,7 @@ export const styles = {
   },
 
   emptyTitle: {
+    lineHeight: 1.2,
     margin: "0 0 8px",
     fontSize: "40px",
     fontWeight: 700,
@@ -147,7 +139,7 @@ export const styles = {
   },
 
   emptyText: {
-    margin: 100,
+    margin: 50,
     fontSize: "20px",
     lineHeight: 1.7,
     color: "#cbd5e1",
@@ -160,7 +152,6 @@ export const styles = {
     padding: "14px 16px",
     borderRadius: "18px",
     border: "1px solid rgba(255, 255, 255, 0.08)",
-    width: "fit-content",
     maxWidth: "70%",
   },
 
@@ -171,18 +162,8 @@ export const styles = {
   },
 
   assistantBubble: {
-    alignSelf: "flex-start",
     background: "rgba(255, 255, 255, 0.05)",
   },
-
-  // roleLabel: {
-  //   marginBottom: "8px",
-  //   fontSize: "12px",
-  //   fontWeight: 700,
-  //   letterSpacing: "0.04em",
-  //   textTransform: "uppercase",
-  //   color: "#93c5fd",
-  // },
 
   messageBody: {
     fontSize: "15px",
