@@ -7,14 +7,14 @@ export const styles = {
     color: "#e5e7eb",
     display: "flex",
     flexDirection: "column",
-    overflowX: "auto",
+    // overflowX: "auto",
   },
 
   shell: {
     flex: 1,
     minHeight: 0,
-    width: "980px",
-    maxWidth: "100%",
+    width: "100%",
+    maxWidth: "980px",
     margin: "0 auto",
     display: "flex",
     flexDirection: "column",
@@ -87,7 +87,7 @@ export const styles = {
     border: "1px solid rgba(255, 255, 255, 0.12)",
     background: "rgba(255, 255, 255, 0.05)",
     color: "#e5e7eb",
-    cursor: "center",
+    cursor: "pointer",
     fontWeight: 600,
   },
 
@@ -119,8 +119,7 @@ export const styles = {
     display: "flex",
     flexDirection: "column",
     gap: "12px",
-    maxHeight: "480px",
-    overFlowY: "auto",
+    // maxHeight: "480px",
     paddingRight: "4px",
     alignItems: "flex-start",
   },
@@ -140,6 +139,7 @@ export const styles = {
   },
 
   emptyTitle: {
+    lineHeight: 1.2,
     margin: "0 0 8px",
     fontSize: "40px",
     fontWeight: 700,
@@ -147,7 +147,7 @@ export const styles = {
   },
 
   emptyText: {
-    margin: 100,
+    margin: 50,
     fontSize: "20px",
     lineHeight: 1.7,
     color: "#cbd5e1",
@@ -160,7 +160,7 @@ export const styles = {
     padding: "14px 16px",
     borderRadius: "18px",
     border: "1px solid rgba(255, 255, 255, 0.08)",
-    width: "fit-content",
+    // width: "fit-content",
     maxWidth: "70%",
   },
 
@@ -171,7 +171,6 @@ export const styles = {
   },
 
   assistantBubble: {
-    alignSelf: "flex-start",
     background: "rgba(255, 255, 255, 0.05)",
   },
 

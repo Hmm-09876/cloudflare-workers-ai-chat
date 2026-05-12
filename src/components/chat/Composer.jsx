@@ -1,5 +1,5 @@
 import { styles } from "./styles"
-import { useRef } from "react";
+// import { useRef } from "react";
 
 export default function Composer({
     // messages,
@@ -49,7 +49,7 @@ export default function Composer({
                     //         }, 0);
                     //     }
                     // }}
-                    onKeyDown={(handleKeyDown)}
+                    onKeyDown={handleKeyDown}
                     placeholder="Type your message..."
                     rows={4}
                     disabled={false}

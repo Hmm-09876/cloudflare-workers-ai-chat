@@ -37,7 +37,7 @@ export default function ChatUI({
       <section style={styles.shell}>
         <div style={styles.topBar}>
           <div>
-            <p style={styles.kicker}>Cloudflare Worker AI</p>
+            <p style={styles.kicker}>Cloudflare Workers AI</p>
             <h1 style={styles.title}>AI Chat Demo</h1>
             <p style={styles.subtitle}>
               Portfolio project showcasing an AI chat app powered by Cloudflare Workers AI.
