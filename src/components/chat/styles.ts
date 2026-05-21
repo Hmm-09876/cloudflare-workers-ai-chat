@@ -28,8 +28,6 @@ export const styles = {
     flexWrap: "wrap",
   },
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-
   kicker: {
     margin: "0 0 6px",
     fontSize: "12px",
@@ -69,8 +67,6 @@ export const styles = {
     whiteSpace: "nowrap",
   },
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-
   modeRow: {
     display: "flex",
     gap: "10px",
@@ -102,14 +98,38 @@ export const styles = {
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
+    gap: "10px",
     background: "rgba(15, 23, 42, 0.8)",
     border: "1px solid rgba(255, 255, 255, 0.08)",
     boxShadow: "0 16px 50px rgba(0, 0, 0, 0.26)",
   },
 
-  messageList: {
+  chatToolbar: {
+    display: "flex",
+    justifyContent: "flex-end",
+    flexShrink: 0,
+  },
+
+  clearButton: {
+    padding: "6px 14px",
+    borderRadius: "999px",
+    border: "1px solid rgba(255, 255, 255, 0.14)",
+    background: "rgba(255, 255, 255, 0.04)",
+    color: "#94a3b8",
+    fontSize: "13px",
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "color 0.15s, border-color 0.15s, background 0.15s",
+  },
+
+  messageScroll: {
+    flex: 1,
+    minHeight: 0,
     overflowY: "auto",
     scrollBehavior: "smooth",
+  },
+
+  messageList: {
     display: "flex",
     flexDirection: "column",
     gap: "12px",
@@ -139,14 +159,12 @@ export const styles = {
   },
 
   emptyText: {
-    margin: 50,
-    fontSize: "20px",
+    margin: "8px 0 0",
+    fontSize: "16px",
     lineHeight: 1.7,
     color: "#cbd5e1",
     maxWidth: "520px",
   },
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 
   bubble: {
     padding: "14px 16px",
@@ -253,4 +271,10 @@ export const styles = {
     cursor: "not-allowed",
     boxShadow: "none",
   },
+
+  limitText: {
+    fontSize: "13px",
+    color: "#94a3b8",
+    whiteSpace: "nowrap",
+  }
 };

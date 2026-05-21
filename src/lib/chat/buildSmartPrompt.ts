@@ -24,7 +24,7 @@ export function buildSmartSystemPrompt(
         - Use WEB RESULTS only if they are relevant.
         - Priority global/english sources.
         - If web results do not clearly support an answer, say you could not verify it.
-        - Prefer a short direct answer over a long list.
+        - Answer clearly and completely using the web results.
         - Mention the basis of the answer, for example: search trend, current popularity, or recent mentions.
         - Never combine unrelated sources into one.
             

@@ -4,8 +4,10 @@ export default function Composer({
     input,
     handleKeyDown,
     loading,
+    canSend,
     onSend,
     maxInputLength,
+    limitText,
     handleInputChange,
 }) {
     return (
@@ -27,12 +29,16 @@ export default function Composer({
             </div>
 
             <div style={styles.composerFooter}>
+                <div style={styles.limitText}>
+                    {limitText}
+                </div>
+                
                 <button
                     onClick={onSend}
-                    disabled={loading || !input.trim()}
+                    disabled={!canSend || !input.trim()}
                     style={{
                         ...styles.button,
-                        ...(loading || !input.trim() ? styles.buttonDisabled : {}),
+                        ...(!canSend || !input.trim() ? styles.buttonDisabled : {}),
                     }}
                 >
                     {loading ? "Thinking..." : "Send"}
