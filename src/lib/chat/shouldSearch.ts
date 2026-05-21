@@ -1,3 +1,5 @@
+import { readAiText } from "../ai/readAiText";
+
 export type SearchDecision = { 
     shouldSearch: boolean; 
     needClarification?: boolean;
@@ -51,10 +53,7 @@ export async function decideSearchAction(
         }
     );
 
-    const raw = 
-        typeof shouldSearchCheck === "string"
-            ? shouldSearchCheck
-            : String((shouldSearchCheck as any)?.response ?? "");
+    const raw = readAiText(shouldSearchCheck);
 
     try {
         return JSON.parse(raw) as SearchDecision;

@@ -1,3 +1,5 @@
+import { readAiText } from "../ai/readAiText";
+
 export async function toEnQuery(env: Env, query: string) {
   const res = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
     messages: [
@@ -18,7 +20,8 @@ export async function toEnQuery(env: Env, query: string) {
     temperature: 0,
   });
 
-  return (res as any)?.response ?? query;
+  const text = readAiText(res).trim();
+  return text || query;
 }
 
 export function buildGlobalQueries(enQuery: string) {
