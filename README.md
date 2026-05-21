@@ -92,9 +92,9 @@ Check `wrangler.toml` for the Worker name and Durable Object settings.
 ```
 src/
   components/     React UI (chat box, input, mode toggle)
-  hooks/          useChat — messages + limit + cooldown
+  hooks/          useChat - messages + limit + cooldown
   lib/            Search, rate limit, response filter
-  index.ts        Worker entry — /api/chat
+  index.ts        Worker entry - /api/chat
 ```
 
 ---
@@ -106,8 +106,8 @@ src/
 - The timer in the footer shows the **first** refill in the queue.
 - When turns are back at **10**, the timer stops and extra queue items are cleared.
 - State keys in the browser:
-  - `demo-chat-limit` — turns left + refill timestamps
-  - `demo-chat-messages` — chat history (including the limit notice)
+  - `demo-chat-limit` - turns left + refill timestamps
+  - `demo-chat-messages` - chat history (including the limit notice)
 
 To reset everything during testing, clear site data for localhost in the browser dev tools.
 
