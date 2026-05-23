@@ -29,7 +29,7 @@ This project is a small chat website for a portfolio. It uses **Cloudflare Worke
 | UI | React + Vite |
 | API & AI | Cloudflare Workers, Workers AI |
 | Web search (smart mode) | Tavily API |
-| Rate limit (server, optional) | Durable Object `RateLimiter` |
+| Rate limit (backend) | Durable Object `RateLimiter` |
 
 ---
 
