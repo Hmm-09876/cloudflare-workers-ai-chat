@@ -115,7 +115,6 @@ To reset everything during testing, clear site data for localhost in the browser
 
 ## Notes for reviewers
 
-- This is a **learning / portfolio** project, not a production product.
 - Secrets must never be committed; use Wrangler secrets.
 - Smart mode costs more (search + bigger prompts), so limits help control abuse on a free tier.
 
