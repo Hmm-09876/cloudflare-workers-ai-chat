@@ -118,3 +118,11 @@ To reset everything during testing, clear site data for localhost in the browser
 - Secrets must never be committed; use Wrangler secrets.
 - Smart mode costs more (search + bigger prompts), so limits help control abuse on a free tier.
 
+---
+
+## Known bugs
+
+### Client and server rate limit out of sync
+
+The client keeps its own quota in localStorage and in React state. The server enforces its quota in a Durable Object. These two sources can get out of sync. For example, when the server returns 429 the client sets chatRemaining to 0 and rebuilds its refill queue, but another tab or old client state can still show a different remaining count. localStorage is shared between tabs, but each tab also has its own React state and can overwrite the stored value. As a result, the UI can display a quota that does not match the backend.
+
